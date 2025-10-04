@@ -1,0 +1,96 @@
+# Access Control Policies Configuration
+#
+# Defines access policies for each information category
+# NOTE: These are organizational access levels, NOT DoD classification
+
+access_levels:
+  PUBLIC: 1
+  INTERNAL: 2
+  OPERATIONAL: 3
+  SENSITIVE: 4
+  CRITICAL: 5
+
+information_categories:
+  DOCTRINE:
+    minimum_access_level: PUBLIC
+    need_to_know_required: false
+    phase_restricted: false
+    sanitization_required: false
+    audit_required: false
+    description: "Published USAF doctrine and procedures"
+
+  THREAT_DATA:
+    minimum_access_level: OPERATIONAL
+    need_to_know_required: true
+    phase_restricted: false
+    sanitization_required: true
+    audit_required: true
+    description: "Threat intelligence and adversary EMS capabilities"
+
+  ASSET_STATUS:
+    minimum_access_level: OPERATIONAL
+    need_to_know_required: false
+    phase_restricted: false
+    sanitization_required: false
+    audit_required: true
+    description: "EMS platform and asset availability"
+
+  SPECTRUM_ALLOCATION:
+    minimum_access_level: OPERATIONAL
+    need_to_know_required: true
+    phase_restricted: false
+    sanitization_required: false
+    audit_required: true
+    description: "Frequency assignments and spectrum allocations"
+
+  MISSION_PLAN:
+    minimum_access_level: SENSITIVE
+    need_to_know_required: true
+    phase_restricted: false
+    sanitization_required: true
+    audit_required: true
+    description: "EW mission plans and operational details"
+
+  ORGANIZATIONAL:
+    minimum_access_level: INTERNAL
+    need_to_know_required: false
+    phase_restricted: false
+    sanitization_required: false
+    audit_required: false
+    description: "Organizational structure and contacts"
+
+  PROCESS_METRICS:
+    minimum_access_level: INTERNAL
+    need_to_know_required: false
+    phase_restricted: false
+    sanitization_required: false
+    audit_required: true
+    description: "Process performance and efficiency metrics"
+
+# Sanitization rules
+sanitization_rules:
+  THREAT_DATA:
+    levels:
+      OPERATIONAL:
+        remove_fields:
+          - sources
+          - collection_methods
+          - frequency_details
+      SENSITIVE:
+        remove_fields:
+          - sources
+          - collection_methods
+        reduce_precision:
+          - frequency_details  # Round to nearest 100 MHz
+
+  MISSION_PLAN:
+    levels:
+      SENSITIVE:
+        remove_fields:
+          - full_target_coordinates
+          - weapon_specifics
+      OPERATIONAL:
+        remove_fields:
+          - full_target_coordinates
+          - weapon_specifics
+          - detailed_tactics

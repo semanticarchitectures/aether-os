@@ -1,0 +1,99 @@
+# Agent Access Profiles Configuration
+#
+# Defines access profiles for each of the 5 AOC agents
+
+agent_profiles:
+  ems_strategy_agent:
+    role: ems_strategy
+    access_level: SENSITIVE  # 4
+    authorized_categories:
+      - DOCTRINE
+      - THREAT_DATA
+      - ORGANIZATIONAL
+      - PROCESS_METRICS
+    authorized_actions:
+      - query_doctrine
+      - query_threats
+      - develop_strategy
+      - request_information
+    active_phases:
+      - PHASE1_OEG
+      - PHASE2_TARGET_DEVELOPMENT
+    delegation_authority: false
+
+  spectrum_manager_agent:
+    role: spectrum_manager
+    access_level: OPERATIONAL  # 3
+    authorized_categories:
+      - DOCTRINE
+      - SPECTRUM_ALLOCATION
+      - ASSET_STATUS
+      - THREAT_DATA
+    authorized_actions:
+      - query_doctrine
+      - allocate_frequency
+      - check_spectrum_conflicts
+      - coordinate_deconfliction
+      - emergency_reallocation
+      - query_assets
+    active_phases:
+      - PHASE3_WEAPONEERING
+      - PHASE5_EXECUTION
+    delegation_authority: true
+    max_delegation_level: OPERATIONAL
+
+  ew_planner_agent:
+    role: ew_planner
+    access_level: SENSITIVE  # 4
+    authorized_categories:
+      - DOCTRINE
+      - THREAT_DATA
+      - ASSET_STATUS
+      - MISSION_PLAN
+      - SPECTRUM_ALLOCATION
+    authorized_actions:
+      - query_doctrine
+      - query_threats
+      - query_assets
+      - plan_ew_missions
+      - request_frequency_allocation
+      - assign_ems_asset
+      - check_fratricide
+    active_phases:
+      - PHASE3_WEAPONEERING
+    delegation_authority: false
+
+  ato_producer_agent:
+    role: ato_producer
+    access_level: SENSITIVE  # 4
+    authorized_categories:
+      - DOCTRINE
+      - MISSION_PLAN
+      - SPECTRUM_ALLOCATION
+      - ASSET_STATUS
+    authorized_actions:
+      - query_doctrine
+      - produce_ato_ems_annex
+      - validate_mission_approvals
+      - integrate_ems_with_strikes
+    active_phases:
+      - PHASE4_ATO_PRODUCTION
+    delegation_authority: false
+
+  assessment_agent:
+    role: assessment
+    access_level: OPERATIONAL  # 3
+    authorized_categories:
+      - DOCTRINE
+      - MISSION_PLAN
+      - PROCESS_METRICS
+      - ORGANIZATIONAL
+    authorized_actions:
+      - query_doctrine
+      - assess_ato_cycle
+      - analyze_doctrine_effectiveness
+      - generate_lessons_learned
+      - query_process_metrics
+    active_phases:
+      - PHASE6_ASSESSMENT
+    delegation_authority: false

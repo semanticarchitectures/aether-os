@@ -1,0 +1,35 @@
+# Aether OS Requirements
+
+# Core Framework
+python>=3.11
+
+# LLM Integration
+anthropic>=0.25.0
+openai>=1.0.0
+google-generativeai>=0.3.0
+
+# Vector Database
+chromadb>=0.4.0
+
+# Databases
+pymongo>=4.0.0
+
+# API Framework
+fastapi>=0.109.0
+uvicorn>=0.27.0
+pydantic>=2.0.0
+
+# HTTP Client
+requests>=2.31.0
+
+# Geospatial
+shapely>=2.0.0
+geojson>=3.0.0
+
+# OPA Integration
+# Note: OPA itself must be installed separately
+# Install from: https://www.openpolicyagent.org/docs/latest/#running-opa
+
+# Utilities
+python-dotenv>=1.0.0
+pyyaml>=6.0.0
