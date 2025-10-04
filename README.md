@@ -130,6 +130,20 @@ This will:
 4. Analyze context-performance correlations
 5. Produce comprehensive reports
 
+### Run Agent Testing
+
+```bash
+python scripts/test_agent.py
+```
+
+This will:
+1. Load test scenarios with custom contexts
+2. Execute controlled tests on individual agents
+3. Use EvaluatorAgent to score responses
+4. Generate detailed test reports with feedback
+
+Test individual agents in controlled scenarios with custom threats, assets, and evaluation criteria.
+
 ## Configuration
 
 ### Agent Profiles

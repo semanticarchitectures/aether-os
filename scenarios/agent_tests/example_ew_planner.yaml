@@ -1,0 +1,131 @@
+# Example Test Scenario for EW Planner Agent
+#
+# This scenario tests the EW Planner's ability to plan missions
+# with limited assets and multiple targets.
+
+scenario_id: test_ew_planning_002
+name: "EW Mission Planning - Resource Constrained"
+description: "Test EW planner's ability to prioritize targets when assets are limited"
+agent_id: ew_planner_agent
+difficulty: hard
+
+# Context configuration
+context:
+  phase: PHASE3_WEAPONEERING
+  task_description: "Plan EW missions with limited assets"
+  max_context_size: 20000
+
+  # Threat environment
+  threats:
+    - threat_id: "SAM-001"
+      threat_type: "SA-6 Gainful"
+      location:
+        lat: 36.0
+        lon: 44.0
+      priority: "critical"
+      capability: "Medium-range SAM"
+      engagement_range_nm: 15
+
+    - threat_id: "SAM-002"
+      threat_type: "SA-10 Grumble"
+      location:
+        lat: 36.5
+        lon: 44.5
+      priority: "critical"
+      capability: "Long-range SAM"
+      engagement_range_nm: 60
+
+    - threat_id: "SAM-003"
+      threat_type: "SA-15 Gauntlet"
+      location:
+        lat: 36.2
+        lon: 44.2
+      priority: "high"
+      capability: "Short-range SAM"
+      engagement_range_nm: 8
+
+  # Available assets (limited)
+  assets:
+    - asset_id: "EA-001"
+      platform: "EA-18G Growler"
+      capability: "Stand-in jamming"
+      availability: "available"
+      effective_range_nm: 50
+
+    - asset_id: "EA-002"
+      platform: "EC-130H Compass Call"
+      capability: "Communications jamming"
+      availability: "available"
+      effective_range_nm: 200
+
+  # Doctrinal guidance
+  doctrinal_procedures:
+    - "Prioritize critical threats"
+    - "Assign assets based on capability and range"
+    - "Check for EA/SIGINT fratricide"
+    - "Request frequency allocations for all missions"
+    - "Coordinate with strike packages"
+
+  # Historical lessons
+  historical_lessons:
+    - "SA-10 systems require standoff jamming"
+    - "Coordinate EA timing with strike packages"
+    - "Request spectrum early to avoid delays"
+
+# Test messages
+messages:
+  - message_type: "plan_missions"
+    description: "Request mission planning for SEAD operation"
+    payload:
+      mission_type: "SEAD"
+      targets:
+        - "SAM-001"
+        - "SAM-002"
+        - "SAM-003"
+      timeframe: "H-hour to H+4"
+      strike_packages:
+        - name: "Package Alpha"
+          targets: ["SAM-002"]
+          toa: "H+1"  # Time Over Target
+        - name: "Package Bravo"
+          targets: ["SAM-001", "SAM-003"]
+          toa: "H+3"
+
+# Evaluation criteria
+evaluation_criteria:
+  target_coverage:
+    type: "completion"
+    weight: 0.25
+    target: 1.0
+    description: "All critical threats have missions assigned"
+
+  asset_optimization:
+    type: "quality"
+    weight: 0.25
+    target: 0.8
+    description: "Assets assigned appropriately based on capability and range"
+
+  strike_coordination:
+    type: "quality"
+    weight: 0.20
+    target: 0.7
+    description: "EA timing coordinated with strike packages"
+
+  doctrinal_compliance:
+    type: "compliance"
+    weight: 0.15
+    target: 0.9
+    description: "Follows doctrinal procedures for mission planning"
+
+  context_utilization:
+    type: "utilization"
+    weight: 0.15
+    target: 0.6
+    description: "Effective use of provided threat and asset data"
+
+# Metadata
+tags:
+  - ew_planning
+  - resource_constrained
+  - sead
+  - phase3

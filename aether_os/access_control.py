@@ -217,6 +217,28 @@ AGENT_PROFILES = {
         active_phases={"PHASE6_ASSESSMENT"},
         delegation_authority=False,
     ),
+    "evaluator_agent": AgentAccessProfile(
+        agent_id="evaluator_agent",
+        role="evaluator",
+        access_level=AccessLevel.SENSITIVE,
+        authorized_categories={
+            InformationCategory.DOCTRINE,
+            InformationCategory.THREAT_DATA,
+            InformationCategory.ASSET_STATUS,
+            InformationCategory.MISSION_PLAN,
+            InformationCategory.SPECTRUM_ALLOCATION,
+            InformationCategory.PROCESS_METRICS,
+            InformationCategory.ORGANIZATIONAL,
+        },
+        authorized_actions={
+            "evaluate_agent_responses",
+            "score_performance",
+            "provide_feedback",
+            "query_doctrine",
+        },
+        active_phases=set(),  # No phase restrictions - can evaluate at any time
+        delegation_authority=False,
+    ),
 }
 
 
