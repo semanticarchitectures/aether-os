@@ -6,7 +6,7 @@ prioritization, and token budget management.
 """
 
 import logging
-from typing import Dict, Any, List, Optional, Tuple
+from typing import Dict, Any, List, Optional, Tuple, Union
 from dataclasses import dataclass
 import tiktoken
 
@@ -129,13 +129,21 @@ class ContextProcessor:
 
     def _format_doctrinal_context(
         self,
-        doctrinal_context: Dict[str, Any],
+        doctrinal_context: Union[Dict[str, Any], 'DoctrineContext'],
         task_description: Optional[str],
     ) -> Tuple[str, List[str]]:
         """Format doctrinal context section."""
-        procedures = doctrinal_context.get("procedures", [])
-        policies = doctrinal_context.get("policies", [])
-        best_practices = doctrinal_context.get("best_practices", [])
+        # Handle both dict and DoctrineContext object
+        if hasattr(doctrinal_context, 'relevant_procedures'):
+            # DoctrineContext object
+            procedures = doctrinal_context.relevant_procedures or []
+            policies = doctrinal_context.applicable_policies or []
+            best_practices = doctrinal_context.best_practices or []
+        else:
+            # Dictionary format
+            procedures = doctrinal_context.get("procedures", [])
+            policies = doctrinal_context.get("policies", [])
+            best_practices = doctrinal_context.get("best_practices", [])
 
         sections = []
         element_ids = []
@@ -165,13 +173,22 @@ class ContextProcessor:
 
     def _format_situational_context(
         self,
-        situational_context: Dict[str, Any],
+        situational_context: Union[Dict[str, Any], 'SituationalContext'],
     ) -> Tuple[str, List[str]]:
         """Format situational context section."""
-        threats = situational_context.get("current_threats", [])
-        assets = situational_context.get("available_assets", [])
-        missions = situational_context.get("active_missions", [])
-        spectrum = situational_context.get("spectrum_status", {})
+        # Handle both dict and SituationalContext object
+        if hasattr(situational_context, 'current_threats'):
+            # SituationalContext object
+            threats = situational_context.current_threats or []
+            assets = situational_context.available_assets or []
+            missions = situational_context.active_missions or []
+            spectrum = situational_context.spectrum_status or {}
+        else:
+            # Dictionary format
+            threats = situational_context.get("current_threats", [])
+            assets = situational_context.get("available_assets", [])
+            missions = situational_context.get("active_missions", [])
+            spectrum = situational_context.get("spectrum_status", {})
 
         sections = []
         element_ids = []
@@ -221,12 +238,19 @@ class ContextProcessor:
 
     def _format_historical_context(
         self,
-        historical_context: Dict[str, Any],
+        historical_context: Union[Dict[str, Any], 'HistoricalContext'],
         prioritize_recent: bool,
     ) -> Tuple[str, List[str]]:
         """Format historical context section."""
-        lessons_learned = historical_context.get("lessons_learned", [])
-        performance_patterns = historical_context.get("performance_patterns", [])
+        # Handle both dict and HistoricalContext object
+        if hasattr(historical_context, 'lessons_learned'):
+            # HistoricalContext object
+            lessons_learned = historical_context.lessons_learned or []
+            performance_patterns = historical_context.successful_patterns or []
+        else:
+            # Dictionary format
+            lessons_learned = historical_context.get("lessons_learned", [])
+            performance_patterns = historical_context.get("performance_patterns", [])
 
         sections = []
         element_ids = []
@@ -254,11 +278,18 @@ class ContextProcessor:
 
     def _format_collaborative_context(
         self,
-        collaborative_context: Dict[str, Any],
+        collaborative_context: Union[Dict[str, Any], 'CollaborativeContext'],
     ) -> Tuple[str, List[str]]:
         """Format collaborative context section."""
-        peer_states = collaborative_context.get("peer_agent_states", {})
-        shared_artifacts = collaborative_context.get("shared_artifacts", [])
+        # Handle both dict and CollaborativeContext object
+        if hasattr(collaborative_context, 'peer_agent_states'):
+            # CollaborativeContext object
+            peer_states = collaborative_context.peer_agent_states or {}
+            shared_artifacts = collaborative_context.shared_artifacts or []
+        else:
+            # Dictionary format
+            peer_states = collaborative_context.get("peer_agent_states", {})
+            shared_artifacts = collaborative_context.get("shared_artifacts", [])
 
         sections = []
         element_ids = []

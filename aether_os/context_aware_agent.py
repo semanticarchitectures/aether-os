@@ -161,6 +161,9 @@ class ContextAwareBaseAgent(BaseAetherAgent):
         )
 
         try:
+            # Set agent ID for logging
+            self.llm_client._current_agent_id = self.agent_id
+
             # Generate with LLM
             llm_response = self.llm_client.generate(
                 prompt=user_prompt,
@@ -390,15 +393,10 @@ Validation requirements:
         """
         Track which context elements were used.
 
-        Extends base implementation with citation tracking.
-
         Args:
             citation_ids: List of context element IDs cited
         """
-        # Call base implementation
-        super()._track_context_usage(citation_ids)
-
-        # Additional tracking for citations
+        # Track citations for this agent
         if hasattr(self, 'citation_history'):
             self.citation_history.extend(citation_ids)
         else:

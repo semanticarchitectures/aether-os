@@ -12,6 +12,8 @@ from typing import Dict, Any, Optional, List, Union
 from dataclasses import dataclass
 from enum import Enum
 
+from .llm_interaction_logger import log_llm_interaction
+
 logger = logging.getLogger(__name__)
 
 
@@ -147,6 +149,10 @@ class LLMClient:
 
             logger.info(f"Attempting generation with {provider.value}")
 
+            # Log the prompt being sent (debug level for full content)
+            logger.debug(f"System prompt ({len(system_prompt or '')} chars): {(system_prompt or '')[:200]}...")
+            logger.debug(f"User prompt ({len(prompt)} chars): {prompt[:200]}...")
+
             try:
                 response = self._generate_with_provider(
                     provider=provider,
@@ -157,11 +163,52 @@ class LLMClient:
                     model=model,
                     structured_output=structured_output,
                 )
+
+                # Log the response content (debug level for full content)
                 logger.info(f"Successfully generated response with {provider.value}")
+                logger.debug(f"Response content ({len(response.content)} chars): {response.content[:200]}...")
+                logger.info(f"Token usage: {response.tokens_used} tokens")
+
+                # Log full interaction to dedicated LLM log
+                log_llm_interaction(
+                    agent_id=getattr(self, '_current_agent_id', 'unknown'),
+                    provider=provider.value,
+                    model=response.model,
+                    system_prompt=system_prompt,
+                    user_prompt=prompt,
+                    response_content=response.content,
+                    tokens_used=response.tokens_used,
+                    success=True,
+                    metadata={
+                        "max_tokens": max_tokens,
+                        "temperature": temperature,
+                        "structured_output": structured_output is not None
+                    }
+                )
+
                 return response
 
             except Exception as e:
                 logger.warning(f"Failed with {provider.value}: {e}")
+
+                # Log failed interaction
+                log_llm_interaction(
+                    agent_id=getattr(self, '_current_agent_id', 'unknown'),
+                    provider=provider.value,
+                    model=model or "default",
+                    system_prompt=system_prompt,
+                    user_prompt=prompt,
+                    response_content="",
+                    tokens_used=0,
+                    success=False,
+                    error=str(e),
+                    metadata={
+                        "max_tokens": max_tokens,
+                        "temperature": temperature,
+                        "structured_output": structured_output is not None
+                    }
+                )
+
                 last_error = e
                 continue
 
@@ -230,8 +277,38 @@ class LLMClient:
                 # Parse structured output if requested
                 if structured_output:
                     import json
-                    parsed = structured_output.model_validate_json(content)
-                    content = parsed.model_dump_json()
+                    import re
+
+                    # Clean up content - remove markdown code blocks if present
+                    cleaned_content = content.strip()
+                    if cleaned_content.startswith('```json'):
+                        # Extract JSON from markdown code block
+                        json_match = re.search(r'```json\s*\n(.*?)\n```', cleaned_content, re.DOTALL)
+                        if json_match:
+                            cleaned_content = json_match.group(1).strip()
+                    elif cleaned_content.startswith('```'):
+                        # Extract from generic code block
+                        json_match = re.search(r'```\s*\n(.*?)\n```', cleaned_content, re.DOTALL)
+                        if json_match:
+                            cleaned_content = json_match.group(1).strip()
+
+                    # Try to parse and validate
+                    try:
+                        parsed = structured_output.model_validate_json(cleaned_content)
+                        content = parsed.model_dump_json()
+                    except Exception as parse_error:
+                        logger.warning(f"Failed to parse structured output: {parse_error}")
+                        logger.warning(f"Raw content: {content[:200]}...")
+                        # Try to extract JSON from the content if it's mixed with text
+                        json_match = re.search(r'\{.*\}', cleaned_content, re.DOTALL)
+                        if json_match:
+                            try:
+                                parsed = structured_output.model_validate_json(json_match.group(0))
+                                content = parsed.model_dump_json()
+                            except:
+                                raise parse_error
+                        else:
+                            raise parse_error
 
                 return LLMResponse(
                     content=content,
@@ -275,14 +352,26 @@ class LLMClient:
         for attempt in range(self.max_retries):
             try:
                 if structured_output:
-                    response = client.beta.chat.completions.parse(
+                    # Use regular completion with JSON mode for better compatibility
+                    response = client.chat.completions.create(
                         model=model,
                         messages=messages,
                         max_tokens=max_tokens,
                         temperature=temperature,
-                        response_format=structured_output,
+                        response_format={"type": "json_object"},
                     )
-                    content = response.choices[0].message.parsed.model_dump_json()
+                    content = response.choices[0].message.content
+
+                    # Parse and validate the JSON response
+                    import json
+                    try:
+                        json_data = json.loads(content)
+                        parsed = structured_output.model_validate(json_data)
+                        content = parsed.model_dump_json()
+                    except Exception as parse_error:
+                        logger.warning(f"Failed to parse OpenAI structured output: {parse_error}")
+                        logger.warning(f"Raw content: {content[:200]}...")
+                        raise parse_error
                 else:
                     response = client.chat.completions.create(
                         model=model,
@@ -322,7 +411,7 @@ class LLMClient:
 
         # Default model
         if not model:
-            model = "gemini-1.5-pro"
+            model = "gemini-pro"
 
         # Combine system and user prompt for Gemini
         full_prompt = prompt
@@ -347,8 +436,38 @@ class LLMClient:
                 # Parse structured output if requested
                 if structured_output:
                     import json
-                    parsed = structured_output.model_validate_json(content)
-                    content = parsed.model_dump_json()
+                    import re
+
+                    # Clean up content - remove markdown code blocks if present
+                    cleaned_content = content.strip()
+                    if cleaned_content.startswith('```json'):
+                        # Extract JSON from markdown code block
+                        json_match = re.search(r'```json\s*\n(.*?)\n```', cleaned_content, re.DOTALL)
+                        if json_match:
+                            cleaned_content = json_match.group(1).strip()
+                    elif cleaned_content.startswith('```'):
+                        # Extract from generic code block
+                        json_match = re.search(r'```\s*\n(.*?)\n```', cleaned_content, re.DOTALL)
+                        if json_match:
+                            cleaned_content = json_match.group(1).strip()
+
+                    # Try to parse and validate
+                    try:
+                        parsed = structured_output.model_validate_json(cleaned_content)
+                        content = parsed.model_dump_json()
+                    except Exception as parse_error:
+                        logger.warning(f"Failed to parse Google structured output: {parse_error}")
+                        logger.warning(f"Raw content: {content[:200]}...")
+                        # Try to extract JSON from the content if it's mixed with text
+                        json_match = re.search(r'\{.*\}', cleaned_content, re.DOTALL)
+                        if json_match:
+                            try:
+                                parsed = structured_output.model_validate_json(json_match.group(0))
+                                content = parsed.model_dump_json()
+                            except:
+                                raise parse_error
+                        else:
+                            raise parse_error
 
                 return LLMResponse(
                     content=content,

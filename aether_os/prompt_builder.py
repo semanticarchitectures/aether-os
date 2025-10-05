@@ -230,11 +230,19 @@ You must provide actionable feedback for continuous improvement.""",
         parts.append("=" * 80)
 
         if output_schema:
-            parts.append("Provide your response as structured JSON matching this schema:")
-            parts.append(f"```json")
+            parts.append("CRITICAL: Provide your response as valid JSON only. No markdown, no code blocks, no explanatory text.")
+            parts.append("Your response must be a single JSON object matching this exact schema:")
+            parts.append("")
             import json
             parts.append(json.dumps(output_schema, indent=2))
-            parts.append("```")
+            parts.append("")
+            parts.append("IMPORTANT JSON REQUIREMENTS:")
+            parts.append("- Return ONLY the JSON object, nothing else")
+            parts.append("- Do not wrap in ```json code blocks")
+            parts.append("- Ensure all required fields are included")
+            parts.append("- Use proper JSON syntax (double quotes, no trailing commas)")
+            parts.append("- Include context_citations array with element IDs you reference")
+            parts.append("- Include doctrine_citations array with specific doctrine references")
         else:
             parts.append("Provide a clear, structured response that:")
             parts.append("1. Addresses the task completely")
